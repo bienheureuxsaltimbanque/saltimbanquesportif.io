@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Suivi EPMS – 200 semaines</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+:root{--bg:#dfe3da;--card:#f6f7f2;--ink:#1d2518;--mute:#5d6655;--line:#c3c9ba;--acc:#26402b;--on:#f6f7f2;--blue:#1f3a5f;--ok:#3f7d3a;--warn:#b5542a;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#161a14;--card:#20261e;--ink:#e8ecdf;--mute:#9aa58f;--line:#363f33;--acc:#a8cf92;--on:#161a14;--blue:#8fb2e0;--ok:#7fc276;--warn:#e0875a;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 Barlow,system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;margin:0;letter-spacing:.01em}
+h1{font-size:34px;line-height:1}
+h2{font-size:24px;margin:22px 0 8px}
+h3{font-size:20px}
+.mute{color:var(--mute);font-size:14px}
+.ribbon{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin:14px 0 4px}
+.ribbon button{height:34px;border:0;border-radius:3px;background:var(--line);color:var(--ink);font:700 14px "Barlow Condensed",sans-serif;cursor:pointer;padding:0}
+.ribbon button.c2{background:color-mix(in srgb,var(--blue) 30%,var(--line))}
+.ribbon button.full{background:var(--ok);color:#fff}
+.ribbon button.sel{outline:3px solid var(--ink);outline-offset:1px}
+.ribbon button.now{box-shadow:inset 0 -4px 0 var(--warn)}
+nav{display:flex;gap:6px;margin:16px 0 4px}
+nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;font:600 15px Barlow,sans-serif;cursor:pointer}
+nav button[aria-selected=true]{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;margin:10px 0;overflow:hidden}
+.card>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card>summary::-webkit-details-marker{display:none}
+.tag{font:600 13px Barlow,sans-serif;padding:2px 8px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.tag.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.body{padding:0 14px 14px}
+.ex{display:grid;grid-template-columns:auto 1fr 84px;gap:8px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ex b{font-weight:600}
+.ex small{display:block;color:var(--mute)}
+input,select,button.act{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-width:0}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--ok)}
+button.act{background:var(--acc);color:var(--on);border-color:var(--acc);font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;margin:8px 0}
+.tg div{background:var(--bg);border-radius:6px;padding:6px}
+.tg strong{display:block;font:700 22px "Barlow Condensed",sans-serif}
+.tg span{font-size:12px;color:var(--mute)}
+.note{border-left:4px solid var(--blue);padding:6px 10px;background:var(--card);margin:10px 0;font-size:14px}
+.wk{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.dots{display:flex;gap:4px}.dots i{width:14px;height:14px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--ok)}
+.heat{display:grid;grid-template-columns:repeat(20,1fr);gap:2px}.heat i{aspect-ratio:1;background:var(--line);border-radius:2px}.heat i.h1{background:color-mix(in srgb,var(--ok) 20%,var(--line))}.heat i.h2{background:color-mix(in srgb,var(--ok) 40%,var(--line))}.heat i.h3{background:color-mix(in srgb,var(--ok) 60%,var(--line))}.heat i.h4{background:color-mix(in srgb,var(--ok) 80%,var(--line))}.heat i.h5{background:var(--ok)}.heat i.cur{outline:2px solid var(--warn)}
+.body ol,.body ul{padding-left:20px;margin:6px 0}.body li{margin:6px 0}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Suivi EPMS</h1>
+<p class="mute" id="sub"></p>
+<div class="ribbon" id="rib" role="group" aria-label="Phases"></div>
+<div class="row"><button class="act ghost" id="pv" aria-label="Semaine précédente">‹</button><b id="wl"></b><button class="act ghost" id="nx" aria-label="Semaine suivante">›</button><label class="mute">Aller à la semaine <input type="number" id="jp" min="1" max="520" style="width:72px"></label></div>
+<p class="mute" id="cyc"></p>
+<nav role="tablist"><button role="tab" data-v="s">Séances</button><button role="tab" data-v="o">Objectifs</button><button role="tab" data-v="b">Bilan</button><button role="tab" data-v="g">Guide</button></nav>
+<section id="v-s"></section>
+<section id="v-o" hidden></section>
+<section id="v-b" hidden></section>
+<section id="v-g" hidden></section>
+</main>
+<script>
+const KEY="epms-suivi-v1",$=s=>document.querySelector(s);
+const mon=d=>{d=new Date(d);const k=(d.getDay()+6)%7;d.setDate(d.getDate()-k);return d.toISOString().slice(0,10)};
+let S={start:mon(new Date()),sex:"H",logs:{},tg:{},ses:{}};
+try{const r=localStorage.getItem(KEY);if(r)Object.assign(S,JSON.parse(r))}catch(e){}
+let GH={o:"",r:"",b:"main",t:"",auto:false},tm;try{Object.assign(GH,JSON.parse(localStorage.getItem("epms-gh")||"{}"))}catch(e){}
+const ghOK=()=>GH.o&&GH.r&&GH.t;
+const save=()=>{S.upd=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(GH.auto&&ghOK()){clearTimeout(tm);tm=setTimeout(()=>ghPush(true),4000)}};
+const today=()=>new Date().toISOString().slice(0,10);
+const nowW=()=>Math.min(520,Math.max(1,Math.floor((new Date(today())-new Date(S.start))/6048e5)+1));
+let W=nowW(),V="s";
+
+/* Tests : EPMS = protocole du manuel PIA-7.1.1 ; sinon repère personnel */
+const T=[
+{id:"cooper",n:"Demi-Cooper (6 min, marche/course)",u:"m",epms:1,s:()=>30,h:"Distance maximale en 6 min, sans arrêt. Barème EPMS : 1250 m (H) / 1050 m (F) = niveau 4 « correct »."},
+{id:"abdo",n:"Gainage abdominal (flexion tenue)",u:"s",epms:1,cap:180,s:()=>10,h:"Pieds calés, coudes touchant les cuisses, lombaires au sol, bras collés à la poitrine. Tenue max 3’00."},
+{id:"lomb",n:"Gainage lombaire (Sorensen)",u:"s",epms:1,cap:180,s:()=>10,h:"Ventre sur le bord d’un lit, bassin appuyé, chevilles tenues par quelqu’un, bras croisés, tronc à l’horizontale. Max 3’00 = niveau 5."},
+{id:"pompes",n:"Pompes max d’affilée",u:"rép",s:l=>Math.max(2,Math.round(l*.1)),h:"Corps aligné, descente complète, sans pause au sol."},
+{id:"planche",n:"Planche sur avant-bras",u:"s",s:()=>10,h:"Fessiers alignés avec les épaules."},
+{id:"taille",n:"Tour de taille (nombril)",u:"cm",s:()=>-1,h:"Même heure, à jeun, une fois par semaine."}
+];
+const log=id=>S.logs[id]||[];
+const base=id=>log(id)[0]?.v, last=id=>{const l=log(id);return l.length?l[l.length-1].v:undefined};
+const target=t=>S.tg[t.id]??(last(t.id)==null?null:Math.min(t.cap??1e9,last(t.id)+t.s(last(t.id))));
+const ref=(id,d)=>last(id)??d;
+const vma=()=>last("cooper")?last("cooper")/100:null; // km/h ≈ vitesse du demi-Cooper (estimation)
+const kmh=(a,b)=>vma()?`${(vma()*a/100).toFixed(1)}–${(vma()*b/100).toFixed(1)} km/h`:"fais le demi-Cooper";
+
+const PV=["standard, descente 3 s","largeur variable (épaules +10 cm, épaules, serrées)","pieds surélevés (chaise)","explosives","archer","pieds surélevés + pause 2 s","pseudo-planche (mains vers les hanches)","archer pieds surélevés"];
+const TT=()=>{const ph=Math.min(7,Math.floor((nowW()-1)/25));return ph<1?T:T.concat([{id:"pv"+ph,n:"Pompes max – "+PV[ph],u:"rép",s:l=>Math.max(1,Math.round(l*.1)),h:"Variante de ta phase actuelle : ton meilleur indicateur de force."}])};
+const PH=["Fondations","Volume","Force relative","Puissance","Unilatéral","Densité","Maîtrise","Élite"];
+/* Génération : 8 phases de 25 semaines, cycles de 6 (5 de charge croissante + 1 de décharge/tests) */
+const ns=pr=>{const m=/^(\d+) ×/.exec(pr);return m?Math.min(8,+m[1]):1};
+const SH={A:[["a1","a4"],["a2","a5"],["a6"]],B:[["b1","b6"],["b2","b3"]],C:[["c1"],["c8","c5"],["c6","c2"]],D:[["d1","d4"],["d2","d5"],["d6"]]};
+function plan(w,ct){
+ const ph=Math.min(7,Math.floor((w-1)/25)),c=Math.floor((w-1)/6),k=(w-1)%6,dl=k==5,m=(dl?.75:1)*(1+Math.max(0,w-200)/100);
+ const R=x=>Math.max(1,Math.round(x*m)),f=dl?.5:Math.min(.85,.55+.05*k+.01*ph);
+ const pb=ref("pompes",10),pr=Math.max(3,Math.round(pb*f*[1,1,.8,.7,.5,.65,.4,.4][ph])),ps=Math.max(2,3+Math.floor(ph/2)-(dl?1:0));
+
+ const A=[
+  ["a1","Pompes – "+PV[ph],`${ps} × ${pr}`,"Repos 90 s. Bloqué ? −2 reps ou mains surélevées."],
+  ["a2",ph<4?"Dips sur chaise":ph<6?"Dips pieds surélevés":"Dips lents (4 s)",`${3+Math.floor(ph/3)} × ${R(9+1.5*ph+.8*k)}`,"Repos 60 s."],
+  ["a3",ph<1?"Pompes mains surélevées":ph<4?"Pompes diamant":"Pompes diamant pieds surélevés",`2 × ${Math.max(5,Math.round(pr*.8))}`,"Fin de séance, technique propre."],
+  ["a6",ph<3?"Pompes pike (épaules)":"Pompes pike pieds surélevés",`3 × ${R(Math.max(5,Math.round(pr*.7)))}`,"Hanches hautes, tête vers le sol entre les mains."],
+  ["a4","Planche avant-bras",`3 × ${R(30+12*ph+5*k)} s`,"Repos 15 s (EPMS)."],
+  ["a5","Planche latérale",`2 × ${R(20+6*ph+3*k)} s / côté`,"Repos 15 s."],
+  ["a7","Superman + Y-T-W au sol (dos)",`3 × ${R(10+k+Math.floor(ph/2))}`,"Tenue 2 s en haut, mouvement lent."]];
+ const SQ=["½ squat (genoux à 90°)","½ squat, descente 3 s","squat bulgare (pied sur chaise)","squat sauté","squat bulgare, descente 3 s","pistol assisté (main sur un mur)","pistol assisté léger","pistol sur chaise"];
+ const sq=ph<2?`4 × ${R(Math.min(50,25+3*k+5*ph))}`:ph==3?`4 × ${R(10+k)}`:`3 × ${R(Math.min(15,7+k+ph))} / jambe`;
+ const mins=Math.round(Math.min(60,15+4*c)*(ct?.75:1)),fr=Math.round(Math.min(20,8+Math.floor(ph*1.5)+Math.floor(k/2))*(ct?.75:1));
+ const cont=`Footing continu ${mins} min · ${kmh(ph<1?55:65,ph<1?65:75)}`,frac=`Fractionné 30 s vite / 30 s lent × ${fr} · vite ≈ ${kmh(90,100)}`;
+ const run=dl?"Demi-Cooper (test) puis 15 min de footing":cont;
+ const runD=dl?"Footing léger 15 min":c==0?`Footing léger ${Math.min(20,mins)} min · ${kmh(55,65)}`:frac;
+ const B=[
+  ["b1",SQ[ph],sq,"Dos droit, talons au sol, lent."],
+  ["b2",ph<3?"Fentes marchées":"Fentes sautées alternées",`3 × ${R(10+k+ph)} / jambe`,"Genou avant au-dessus du pied."],
+  ["b3",ph<3?"Pont fessier unipodal":"Pont unipodal pieds surélevés",`3 × ${R(8+k+ph)} / jambe`,"Sans à-coup."],
+  ["b4","Chaise murale",`3 × ${R(30+8*ph+4*k)} s`,"Cuisses à l’horizontale."],
+  ["b6","Mollets sur une jambe (montées sur la pointe)",`3 × ${R(Math.min(40,15+2*k+2*ph))} / jambe`,"Sur une marche d’escalier si possible, amplitude complète."]];
+ const n=3+(ph>=4?1:0)-(ct?1:0),d=R(Math.min(90,30+5*ph+2*k)),ab=R(Math.min(40,15+3*ph+k));
+ const C=[
+  ["c1",`Circuit postural × ${n}`,`${d} s par exo`,"Lent. Superman · Y-T-W au sol · planche · planche latérale · pont fessier. Repos 15 s, 3 min entre circuits."],
+  ["c2",`Circuit abdos × ${ct?1:ph<4?2:3}`,`${ab} rép par exo`,"Lombaires au sol. Crunch genoux · relevés de jambes · Russian twist · hollow body. Repos 15 s, 3 min entre circuits."],
+  ["c3",ph<3?"Rowing sous table (optionnel)":ph<5?"Rowing sous table pieds surélevés":"Rowing un bras sous table",`${3+Math.floor(ph/3)} × ${R(8+k+ph)}`,"Table très solide. Sinon : nage ventre en plus."],
+  ["c4","Tenue abdominale (position du test)",`3 × ${R(Math.min(170,40+12*ph+6*k))} s`,"Même position que le test EPMS."],
+  ["c5","Obliques – crunch diagonal (coude vers genou opposé)",`3 × ${R(12+k+ph)} / côté`,"Lent, lombaires au sol."],
+  ["c6","Obliques – relevés latéraux de jambes",`3 × ${R(10+k+ph)} / côté`,"Allongé sur le côté, jambes tendues, sans balancer."],
+  ...(ph>=2?[["c7","Planche latérale dynamique (hanche qui descend et remonte)",`2 × ${R(8+k+ph)} / côté`,"Contrôle, sans toucher le sol."]]:[])];
+ const c8=["c8","Pompes légères (volume technique)",`3 × ${Math.max(4,Math.round(pr*.6))}`,"Repos 60 s, qualité avant tout."];
+ const D=[
+  ["d1","Montées sur chaise (step-up)",`3 × ${R(10+k+ph)} / jambe`,"Pied entier sur la chaise, sans pousser avec l’autre jambe."],
+  ["d2","Squat large, descente 3 s",`3 × ${R(Math.min(30,15+k+ph))}`,"Pointes de pieds vers l’extérieur, genoux dans l’axe."],
+  ["d3","Pont fessier, pause 2 s en haut",`3 × ${R(12+k+ph)}`,"Serre les fessiers en haut."],
+  ["d4","Mollets, deux jambes (lent)",`3 × ${R(Math.min(40,18+2*k+2*ph))}`,"3 s en bas, amplitude complète."],
+  ["d5","Planche, planche latérale, hollow body",`3 × ${R(30+10*ph+4*k)} s par exo`,"Repos 15 s entre exercices."],
+  ["d6","Intervalles sur place (jumping jacks, montées de genoux, mountain climbers)",`${dl?Math.round(fr*.7):fr} × 30 s vif / 30 s repos`,"Alterne les trois mouvements, effort vif, sans sortir de chez toi."]];
+ const E=[["e1","Course continue",dl?"Demi-Cooper (test) puis 10 min de footing":`${mins} min · ${kmh(ph<1?55:65,ph<1?65:75)}`,"Échauffement 10 min avant. Cible EPMS : 40 min sans s’arrêter, puis VMA 14–15 km/h."]];
+ const F=[["f1",c==0||dl?"Footing léger":"Course fractionnée",dl?"15 min":c==0?`${Math.min(20,mins)} min · ${kmh(55,65)}`:`30 s vite / 30 s lent × ${fr} · vite ≈ ${kmh(90,100)}`,"Facultatif. Saute-la si tu es fatigué : la course du samedi suffit."]];
+ return {A:{t:"Séance A – Haut du corps 1 : poussée, épaules, dos",s:"lun.",x:A},B:{t:"Séance B – Bas du corps 1 : jambes et mollets",s:"mar.",x:B},C:{t:"Séance C – Haut du corps 2 : dos, abdos, obliques",s:"jeu.",x:C.concat([c8])},D:{t:"Séance D – Bas du corps 2 : jambes, gainage et cardio sur place",s:"ven.",x:D},E:{t:"Séance E – Course du week-end",s:"sam.",x:E},F:{t:"Bonus – Course fractionnée ou footing léger",s:"dim.",x:F,opt:1}};
+}
+
+const keyOf=(w,s)=>`${w}-${s}`;
+const done=(w,s)=>!!S.ses[keyOf(w,s)]?.fin;
+const cnt=w=>"ABCDE".split("").filter(s=>done(w,s)).length;
+
+function render(){
+ $("#sub").textContent=`Plan 200 semaines, cycles de 6 semaines du manuel EPMS (PIA-7.1.1) · début ${new Date(S.start).toLocaleDateString("fr-FR")}`;
+ const ph=Math.min(7,Math.floor((W-1)/25)),k0=(W-1)%6;
+ $("#rib").innerHTML=PH.map((p,i)=>`<button class="${i==ph?"sel":""} ${i==Math.floor((nowW()-1)/25)?"now":""}" data-w="${i*25+1}" aria-label="Phase ${i+1} : ${p}">${i+1}</button>`).join("");
+ $("#wl").textContent=`Semaine ${W}${W>200?" · au-delà du plan":" / 200"}`;$("#jp").value=W;
+ $("#cyc").textContent=`Phase ${ph+1} · ${PH[ph]} · cycle ${Math.floor((W-1)/6)+1}, semaine ${k0+1}/6${k0==5?" : décharge et tests":""}`;
+ document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v==V));
+ ["s","o","b","g"].forEach(v=>$("#v-"+v).hidden=v!=V);
+ if(V=="s")seances();if(V=="o")objectifs();if(V=="b")bilan();if(V=="g")guide();
+}
+
+function seances(){
+ const ct=!!S.court,pc=!!S.prec,P=plan(W,ct);let h="";
+ if((W-1)%6==5)h+=`<div class="note">Semaine de décharge : volume réduit pour récupérer. Passe les tests de l’onglet Objectifs.</div>`;
+ if(!last("cooper"))h+=`<div class="note">Commence par les tests de l’onglet Objectifs (surtout le demi-Cooper) : les allures et les répétitions s’ajusteront à toi.</div>`;
+ h+=`<p class="mute">Haut et bas du corps alternent : chaque groupe musculaire récupère au moins 48 h (EPMS). Séance de ~45 min : 5 min d’échauffement, le cœur de séance, étirements.</p>`;
+ h+=`<label class="row"><input type="checkbox" id="ct" ${ct?"checked":""}><b>Mode court</b> <span class="mute">≈ 35 min : superséries, un tour de moins, course raccourcie</span></label><label class="row"><input type="checkbox" id="pc" ${pc?"checked":""}><b>Suivi précis</b> <span class="mute">résultat de chaque série, durée et note par séance</span></label>`;
+ for(const s of Object.keys(P)){
+  const p=P[s],d=S.ses[keyOf(W,s)]||{},ok=!!d.fin;
+  const gs=ct&&SH[s]?SH[s].map(g=>g.map(id=>p.x.find(e=>e[0]==id)).filter(Boolean)):p.x.map(e=>[e]);let gi=0;const fl=[];gs.forEach(g=>g.forEach((e,i)=>fl.push([e,ct&&g.length>1&&i==0?++gi:0])));
+  const dn=pc?`<div class="row"><label>Durée <input type="number" inputmode="numeric" style="width:70px" data-s="${s}" data-dur value="${d.dur||""}"> min</label><input style="flex:1;min-width:150px" data-s="${s}" data-note value="${(d.note||"").replace(/"/g,"&quot;")}" placeholder="Note (forme, sommeil, ressenti…)"></div>`:"";
+  h+=`<details class="card" ${!ok&&!p.opt&&"ABCDE".split("").find(x=>!done(W,x))==s?"open":""}><summary><span><h3>${p.t}</h3><span class="mute">${p.s}${p.opt?" · facultatif":""}</span></span><span class="tag ${ok?"ok":""}">${ok?"Faite "+new Date(d.fin).toLocaleDateString("fr-FR",{day:"numeric",month:"short"}):"À faire"}</span></summary><div class="body">`;
+  for(const [[id,n,pr,tip],gl] of fl){const e=(d.ex||{})[id]||{};
+   h+=`${gl?`<div class="mute" style="margin-top:8px"><b>Superset ${gl}</b> : enchaîne sans repos, puis 60 s</div>`:""}<div class="ex"><input type="checkbox" data-s="${s}" data-e="${id}" ${e.ok?"checked":""} aria-label="${n}"><div><b>${n}</b> – ${pr}<small>${tip}</small></div>${pc?`<span></span><div style="grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap">${Array.from({length:ns(pr)},(_,i)=>`<input type="number" step="any" inputmode="decimal" style="width:64px" data-q="${id}" data-i="${i}" data-s="${s}" data-n="${n.replace(/"/g,"&quot;")}" value="${(e.sets||[])[i]??""}" placeholder="${ns(pr)>1?"S"+(i+1):"réalisé"}" aria-label="Série ${i+1} : ${n}">`).join("")}</div>`:`<input data-s="${s}" data-r="${id}" value="${e.r||""}" placeholder="réalisé" aria-label="Réalisé : ${n}">`}</div>`}
+  h+=`${dn}<div class="row"><label>Effort ressenti <select data-s="${s}" data-rpe>${["","1","2","3","4","5","6","7","8","9","10"].map(x=>`<option ${String(d.rpe||"")==x?"selected":""}>${x}</option>`).join("")}</select> /10</label><button class="act" data-fin="${s}">${ok?"Mettre à jour":"Valider la séance"}</button>${ok?`<button class="act ghost" data-undo="${s}">Annuler</button>`:""}</div></div></details>`;
+ }
+ $("#v-s").innerHTML=h;
+}
+
+function objectifs(){
+ let h=`<div class="row" style="margin:12px 0"><label>Barème demi-Cooper <select id="sex"><option value="H" ${S.sex=="H"?"selected":""}>Homme</option><option value="F" ${S.sex=="F"?"selected":""}>Femme</option></select></label></div>
+ <p class="mute">Passe les tests en semaine 1, puis à chaque semaine de décharge (S6, S12, S18…). Chaque résultat fixe l’objectif suivant : bats ton dernier score, sans plafond. Pour les tenues de 3’00, la progression passe ensuite aux variantes plus difficiles. Ta VMA estimée${vma()?` : ≈ ${vma().toFixed(1)} km/h (cible EPMS : 14–15)`:" apparaîtra après le demi-Cooper"}.</p>`;
+ for(const t of TT()){const l=log(t.id),b=base(t.id),c=last(t.id),g=target(t);
+  
+  h+=`<div class="card"><div class="body" style="padding-top:12px"><h3>${t.n} ${t.epms?'<span class="tag">EPMS</span>':""}</h3><div class="mute">${t.h}</div>
+  <div class="tg"><div><strong>${b??"–"}</strong><span>départ</span></div><div><strong>${c??"–"}</strong><span>actuel (${t.u})</span></div><div><strong>${g??"–"}</strong><span>à battre</span></div></div>
+  <div class="mute">${l.length>1?"Gain depuis le départ : "+(c-b>0?"+":"")+Math.round((c-b)*10)/10+" · ":""}${l.length} mesure${l.length>1?"s":""}</div>
+  <div class="row"><input type="number" step="any" inputmode="decimal" id="in-${t.id}" placeholder="Résultat (${t.u})" style="width:140px"><button class="act" data-add="${t.id}">Enregistrer</button><input type="number" step="any" inputmode="decimal" data-tg="${t.id}" placeholder="Objectif perso" style="width:100px" aria-label="Changer l’objectif"></div>
+  ${l.length>1?`<div class="mute" style="margin-top:6px">${l.slice(-5).map(x=>`${new Date(x.d).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})} : ${x.v}`).join(" → ")}</div>`:""}</div></div>`;
+ }
+ $("#v-o").innerHTML=h;
+}
+
+function guide(){
+ const G=[
+ ["Démarrer en 3 étapes",`<ol><li>Onglet <b>Bilan</b> : règle la date de début du plan (le lundi de ta première semaine).</li><li>Onglet <b>Objectifs</b> : passe les tests de la semaine 1, surtout le demi-Cooper, et enregistre chaque résultat. Les répétitions et les allures de course s’ajustent ensuite à toi.</li><li>Onglet <b>Séances</b> : fais les séances A, B, C, D et E de la semaine en cours.</li></ol>`],
+ ["Une semaine type",`<p>Cinq séances de 40 à 50 min : A (haut du corps 1) le lundi, B (bas du corps 1) le mardi, C (haut du corps 2) le jeudi, D (bas du corps 2) le vendredi, E (course) le samedi. Haut et bas alternent : chaque groupe musculaire récupère au moins 48 h (EPMS) et travaille deux fois par semaine. La course est regroupée le week-end : E le samedi, et le dimanche une course fractionnée ou un footing léger, facultatif. En semaine, le vendredi inclut des intervalles sur place pour le cardio. Commence chaque séance par 5 min d’échauffement et finis par des étirements.</p>`],
+ ["Remplir une séance",`<ul><li>Touche une séance pour l’ouvrir. Coche chaque exercice fait et note dans « réalisé » ce que tu as vraiment fait (par exemple 8-7-6).</li><li>Choisis l’effort ressenti de 1 (facile) à 10 (maximum), puis touche <b>Valider la séance</b>. Elle apparaît alors en vert dans le bilan.</li><li>Bloqué sur une série ? Baisse de 2 répétitions ou prends une variante plus facile, plutôt que de sauter la séance.</li><li>Une séance validée par erreur se retire avec <b>Annuler</b>.</li></ul>`],
+ ["Mode court",`<p>Dans l’onglet Séances, coche <b>Mode court</b> pour tenir en ~35 min. Les exercices sont regroupés en superséries : deux exercices enchaînés sans repos, puis 60 s. Quelques exercices secondaires sont retirés (pompes de finition, chaise murale, rowing, tenue abdominale, planche latérale dynamique), les circuits ont un tour de moins et la course est raccourcie d’un quart. Tes résultats restent enregistrés quand tu changes de mode. Le volume est plus faible : garde le mode complet dès que tu as le temps et pour les semaines de tests.</p>`],
+ ["Suivi précis",`<p>Coche <b>Suivi précis</b> dans l’onglet Séances. Chaque exercice affiche alors une case par série : note les répétitions (ou les secondes) réellement faites, série par série. Tu peux aussi noter la durée de la séance et une remarque (forme, sommeil, ressenti). L’onglet Bilan ajoute ensuite une section <b>Volume et records</b> : meilleure série et total par exercice, et temps d’entraînement cumulé. Tu peux activer ou couper ce mode à tout moment sans rien perdre.</p>`],
+ ["Les phases et les cycles",`<p>Le plan compte 8 phases de 25 semaines (boutons 1 à 8 en haut). Chaque phase apporte des variantes plus difficiles. Les semaines sont groupées en cycles de 6 : cinq semaines de charge croissante, puis une semaine de <b>décharge</b> avec volume réduit et tests. Utilise les flèches ou le champ « Aller à la semaine » pour consulter une autre semaine. Après la semaine 200, tu restes en phase Élite et le volume continue d’augmenter.</p>`],
+ ["Les tests et les objectifs",`<ul><li>Refais les tests à chaque semaine de décharge (S6, S12, S18…). Chaque carte décrit le protocole à suivre.</li><li>Le chiffre « à battre » est ton dernier résultat plus un petit pas. Il n’y a pas de plafond, sauf les 3’00 des tests de tenue : ensuite, la progression passe par les variantes.</li><li>Tu peux saisir un objectif perso dans le champ de chaque carte.</li><li>Ta VMA (vitesse maximale aérobie) est estimée à partir du demi-Cooper. Elle règle les allures de course de chaque séance.</li><li>Choisis le barème Homme ou Femme en haut de l’onglet Objectifs : il sert à lire ton niveau au demi-Cooper.</li></ul>`],
+ ["Sauvegarder",`<ul><li>Chaque action s’enregistre toute seule, mais seulement dans <b>ce navigateur, sur cet appareil</b>.</li><li>Exporte une copie (Bilan, « Exporter ») chaque semaine et garde-la dans ton cloud. « Importer » la remet en place sur un autre appareil ou après un effacement.</li><li>Ouvre toujours le fichier depuis la même adresse et ne vide pas les données du site dans les réglages du navigateur.</li></ul>`],
+ ["Synchronisation GitHub",`<p>Elle copie ton suivi dans un dépôt GitHub <b>privé</b>, ce qui donne une sauvegarde permanente et la même progression sur téléphone et ordinateur. Dans l’onglet Bilan, renseigne ton pseudo GitHub, le nom du dépôt de données, la branche (main) et un jeton d’accès limité à ce dépôt, puis touche <b>Enregistrer les réglages</b> et <b>Envoyer</b>. Coche l’envoi automatique pour que chaque modification parte toute seule. À l’ouverture, l’appli propose de charger une version plus récente trouvée sur GitHub. Sur un nouvel appareil : saisis les mêmes réglages puis touche <b>Récupérer</b>. Ne mets jamais le jeton dans un fichier du dépôt.</p>`],
+ ["Pause, retard, maladie",`<p>Les données sont rangées par numéro de semaine. Si tu fais une pause de N semaines, décale la date de début de N semaines (onglet Bilan) : tu reprends au même point du plan sans rien perdre. Après une longue pause, refais d’abord les tests plutôt que de reprendre à pleine charge.</p>`],
+ ["Sécurité",`<p>Une douleur vive, une gêne dans une articulation ou un vertige : arrête l’exercice. Une fatigue anormale plusieurs jours de suite : prends une semaine de décharge. Pour un doute médical, demande l’avis d’un médecin.</p>`]];
+ $("#v-g").innerHTML=G.map((g,i)=>`<details class="card" ${i==0?"open":""}><summary><h3>${g[0]}</h3></summary><div class="body">${g[1]}</div></details>`).join("");
+}
+
+/* Synchronisation GitHub (dépôt privé de données, jeton gardé hors de l’export) */
+const ghURL=()=>`https://api.github.com/repos/${GH.o}/${GH.r}/contents/suivi.json?ref=${GH.b||"main"}`;
+const ghH=raw=>({Authorization:"Bearer "+GH.t,Accept:raw?"application/vnd.github.raw+json":"application/vnd.github+json"});
+const say=m=>{const e=$("#gst");if(e)e.textContent=m};
+async function ghGet(){const r=await fetch(ghURL(),{headers:ghH(true)});if(r.status==404)return null;if(!r.ok)throw new Error("GitHub "+r.status);return JSON.parse(await r.text())}
+async function ghPush(auto){
+ try{say("Envoi…");const rem=await ghGet();
+  if(rem&&(rem.upd||0)>(S.upd||0)){if(auto){say("GitHub contient une version plus récente : touche « Récupérer ».");return}if(!confirm("GitHub contient une version plus récente. L’écraser ?"))return}
+  const m=await fetch(ghURL(),{headers:ghH(false)});const sha=m.ok?(await m.json()).sha:undefined;
+  const body={message:"Suivi "+today(),content:btoa(unescape(encodeURIComponent(JSON.stringify(S)))),branch:GH.b||"main"};if(sha)body.sha=sha;
+  const r=await fetch(ghURL().split("?")[0],{method:"PUT",headers:Object.assign({"Content-Type":"application/json"},ghH(false)),body:JSON.stringify(body)});
+  if(!r.ok)throw new Error("GitHub "+r.status);say("Envoyé à "+new Date().toLocaleTimeString("fr-FR")+".")
+ }catch(e){say("Échec : "+e.message)}
+}
+async function ghPull(silent){
+ try{say("Récupération…");const rem=await ghGet();if(!rem){say("Aucun fichier suivi.json sur GitHub : envoie d’abord.");return}
+  if(silent){if(!((rem.upd||0)>(S.upd||0)))return say("À jour.");if(!confirm("Une version plus récente existe sur GitHub. La charger ?"))return}
+  S=Object.assign({start:mon(new Date()),sex:"H",logs:{},tg:{},ses:{}},rem);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}W=nowW();render();say("Récupéré.")
+ }catch(e){say("Échec : "+e.message)}
+}
+function ghUI(){return `<h2>Synchronisation GitHub</h2><p class="mute">Sauvegarde ton suivi dans un dépôt GitHub privé (procédure dans le Guide). Le jeton reste dans ce navigateur et n’est jamais inclus dans l’export.</p>
+<div class="row"><input id="gho" placeholder="Propriétaire (pseudo)" value="${GH.o}" style="flex:1;min-width:130px"><input id="ghr" placeholder="Dépôt (ex. suivi-data)" value="${GH.r}" style="flex:1;min-width:130px"></div>
+<div class="row"><input id="ghb" placeholder="Branche" value="${GH.b||"main"}" style="width:100px"><input id="ght" type="password" placeholder="Jeton d’accès" value="${GH.t}" style="flex:1;min-width:150px" autocomplete="off"></div>
+<label class="row"><input type="checkbox" id="gha" ${GH.auto?"checked":""}> Envoi automatique quelques secondes après chaque modification</label>
+<div class="row"><button class="act" id="ghs">Enregistrer les réglages</button><button class="act ghost" id="ghp">Envoyer</button><button class="act ghost" id="ghg">Récupérer</button></div><p class="mute" id="gst"></p>`}
+
+function recs(){const R2={};let mn=0;for(const k in S.ses){const o=S.ses[k];mn+=+o.dur||0;for(const id in o.ex||{}){const e=o.ex[id];if(!e.n||!e.sets)continue;const r=R2[e.n]=R2[e.n]||{b:0,t:0};for(const v of e.sets){const x=parseFloat(v);if(x>0){r.t+=x;r.b=Math.max(r.b,x)}}}}
+ const L=Object.entries(R2).sort((a,b)=>b[1].t-a[1].t).slice(0,15);if(!L.length&&!mn)return"";
+ return `<h2>Volume et records</h2><p class="mute">Issus du suivi précis (répétitions ou secondes selon l’exercice).${mn?` Temps d’entraînement saisi : ${Math.floor(mn/60)} h ${mn%60} min.`:""}</p>`+L.map(([n,r])=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)"><span>${n}</span><span class="mute">record ${r.b} · total ${r.t}</span></div>`).join("")}
+
+function bilan(){
+ let tot=0,h="";const cs=[];for(let w=1;w<=200;w++){const n=cnt(w);tot+=n;cs.push(n)}
+ const wd=cs.filter(n=>n==5).length;
+ h+=`<div class="tg"><div><strong>${tot}/1000</strong><span>séances faites</span></div><div><strong>${wd}</strong><span>semaines complètes</span></div><div><strong>${nowW()}/200</strong><span>semaine en cours</span></div></div><div class="bar"><i style="width:${tot/10}%"></i></div>`;
+ h+=`<h2>200 semaines</h2><div class="heat">${cs.map((n,i)=>`<i class="h${n} ${i+1==nowW()?"cur":""}" title="S${i+1} : ${n}/5"></i>`).join("")}</div><p class="mute">Une case par semaine, de claire (0 séance) à foncée (5). Contour orange : semaine en cours.</p><h2>Par phase</h2>`;
+ h+=PH.map((p,i)=>{const n=cs.slice(i*25,i*25+25).reduce((a,b)=>a+b,0);return `<div class="wk"><b>P${i+1}</b><div><div>${p} <span class="mute">S${i*25+1}–${i*25+25}</span></div><div class="bar"><i style="width:${n/125*100}%"></i></div></div><span class="mute">${n}/125</span></div>`}).join("");
+ h+=recs();
+ h+=ghUI();
+ h+=`<h2>Données</h2><p class="mute">Tout reste dans ton navigateur. Exporte de temps en temps pour garder une copie ou changer d’appareil.</p>
+ <div class="row"><label>Début du plan <input type="date" id="st" value="${S.start}"></label></div>
+ <div class="row"><button class="act" id="exp">Exporter (JSON)</button><label class="act ghost" style="padding:7px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer">Importer<input type="file" id="imp" accept=".json" hidden></label><button class="act ghost" id="rst">Tout effacer</button></div>`;
+ $("#v-b").innerHTML=h;
+}
+
+document.addEventListener("click",e=>{
+ const t=e.target,g=a=>t.closest("["+a+"]")?.getAttribute(a);
+ if(t.id=="ghs"){GH={o:$("#gho").value.trim(),r:$("#ghr").value.trim(),b:$("#ghb").value.trim()||"main",t:$("#ght").value.trim(),auto:$("#gha").checked};try{localStorage.setItem("epms-gh",JSON.stringify(GH))}catch(e){}say("Réglages enregistrés.");return}
+ if(t.id=="ghp"){ghPush(false);return}
+ if(t.id=="ghg"){ghPull(false);return}
+ if(t.id=="pv"){W=Math.max(1,W-1);render();return}
+ if(t.id=="nx"){W=Math.min(520,W+1);render();return}
+ if(g("data-w")){W=+g("data-w");render();return}
+ if(t.dataset.v){V=t.dataset.v;render();return}
+ if(t.dataset.fin){const s=t.dataset.fin,k=keyOf(W,s);S.ses[k]=Object.assign(S.ses[k]||{},{fin:today()});save();render();return}
+ if(t.dataset.undo){delete S.ses[keyOf(W,t.dataset.undo)].fin;save();render();return}
+ if(t.dataset.add){const id=t.dataset.add,v=parseFloat($("#in-"+id).value);if(isNaN(v))return;(S.logs[id]=S.logs[id]||[]).push({d:today(),v});save();render();return}
+ if(t.id=="exp"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="suivi-epms-"+today()+".json";a.click();return}
+ if(t.id=="rst"&&confirm("Effacer toutes les données de suivi ?")){S={start:mon(new Date()),sex:"H",logs:{},tg:{},ses:{}};save();W=nowW();render()}
+});
+document.addEventListener("change",e=>{
+ const t=e.target,d=t.dataset;
+ if(d.q!==undefined){const k=keyOf(W,d.s),o=S.ses[k]=S.ses[k]||{};o.ex=o.ex||{};const e=o.ex[d.q]=o.ex[d.q]||{};e.sets=e.sets||[];e.sets[+d.i]=t.value;e.sets=Array.from(e.sets,x=>x??"");e.n=d.n;e.r=e.sets.filter(x=>x!=="").join("-");save();return}
+ if(d.dur!==undefined||d.note!==undefined){const k=keyOf(W,d.s),o=S.ses[k]=S.ses[k]||{};if(d.dur!==undefined)o.dur=t.value;else o.note=t.value;save();return}
+ if(d.e!==undefined||d.r!==undefined||d.rpe!==undefined){const s=d.s,k=keyOf(W,s),o=S.ses[k]=S.ses[k]||{};o.ex=o.ex||{};
+  if(d.e){(o.ex[d.e]=o.ex[d.e]||{}).ok=t.checked}else if(d.r){(o.ex[d.r]=o.ex[d.r]||{}).r=t.value}else o.rpe=t.value;save();return}
+ if(d.tg){const v=parseFloat(t.value);if(!isNaN(v)){S.tg[d.tg]=v;save();render()}return}
+ if(t.id=="jp"){W=Math.min(520,Math.max(1,+t.value||1));render();return}
+ if(t.id=="pc"){S.prec=t.checked;save();render();return}
+ if(t.id=="ct"){S.court=t.checked;save();render();return}
+ if(t.id=="sex"){S.sex=t.value;save();render()}
+ if(t.id=="st"&&t.value){S.start=t.value;save();W=nowW();render()}
+ if(t.id=="imp"){const f=t.files[0];if(!f)return;f.text().then(x=>{try{S=Object.assign({start:mon(new Date()),sex:"H",logs:{},tg:{},ses:{}},JSON.parse(x));save();W=nowW();render()}catch(err){alert("Fichier illisible.")}})}
+});
+render();if(ghOK())ghPull(true);
+</script>
+</body>
+</html>
