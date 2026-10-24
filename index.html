@@ -49,7 +49,7 @@ button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .note{border-left:4px solid var(--blue);padding:6px 10px;background:var(--card);margin:10px 0;font-size:14px}
 .wk{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
 .dots{display:flex;gap:4px}.dots i{width:14px;height:14px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--ok)}
-.heat{display:grid;grid-template-columns:repeat(20,1fr);gap:2px}.heat i{aspect-ratio:1;background:var(--line);border-radius:2px}.heat i.h1{background:color-mix(in srgb,var(--ok) 20%,var(--line))}.heat i.h2{background:color-mix(in srgb,var(--ok) 40%,var(--line))}.heat i.h3{background:color-mix(in srgb,var(--ok) 60%,var(--line))}.heat i.h4{background:color-mix(in srgb,var(--ok) 80%,var(--line))}.heat i.h5{background:var(--ok)}.heat i.cur{outline:2px solid var(--warn)}
+.heat{display:grid;grid-template-columns:repeat(20,1fr);gap:2px}.heat i{aspect-ratio:1;background:var(--line);border-radius:2px}.heat i.h1{background:color-mix(in srgb,var(--ok) 17%,var(--line))}.heat i.h2{background:color-mix(in srgb,var(--ok) 33%,var(--line))}.heat i.h3{background:color-mix(in srgb,var(--ok) 50%,var(--line))}.heat i.h4{background:color-mix(in srgb,var(--ok) 67%,var(--line))}.heat i.h5{background:color-mix(in srgb,var(--ok) 83%,var(--line))}.heat i.h6{background:var(--ok)}.heat i.cur{outline:2px solid var(--warn)}
 .body ol,.body ul{padding-left:20px;margin:6px 0}.body li{margin:6px 0}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 [hidden]{display:none!important}
@@ -83,9 +83,10 @@ let W=nowW(),V="s";
 /* Tests : EPMS = protocole du manuel PIA-7.1.1 ; sinon repère personnel */
 const T=[
 {id:"cooper",n:"Demi-Cooper (6 min, marche/course)",u:"m",epms:1,s:()=>30,h:"Distance maximale en 6 min, sans arrêt. Barème EPMS : 1250 m (H) / 1050 m (F) = niveau 4 « correct »."},
-{id:"abdo",n:"Gainage abdominal (flexion tenue)",u:"s",epms:1,cap:180,s:()=>10,h:"Pieds calés, coudes touchant les cuisses, lombaires au sol, bras collés à la poitrine. Tenue max 3’00."},
-{id:"lomb",n:"Gainage lombaire (Sorensen)",u:"s",epms:1,cap:180,s:()=>10,h:"Ventre sur le bord d’un lit, bassin appuyé, chevilles tenues par quelqu’un, bras croisés, tronc à l’horizontale. Max 3’00 = niveau 5."},
+{id:"abdo",n:"Gainage abdominal (flexion tenue)",u:"s",epms:1,cap:180,s:()=>10,h:"Allongé sur le dos, hanches et genoux à 90° (mollets posés sur une chaise, ou pieds contre un mur). Mains sur l’avant des épaules, bras collés à la poitrine, menton contre le sternum. Monte le tronc jusqu’à ce que les coudes touchent les cuisses, puis tiens, bras immobiles et bas du dos au sol, jusqu’à 3’00. Pas assez souple ? Monte aussi haut que possible."},
+{id:"pont",n:"Tenue du pont fessier",u:"s",s:()=>10,h:"Sur le dos, genoux fléchis, bassin monté, épaules-hanches-genoux alignés. Arrête quand le bassin descend."},
 {id:"pompes",n:"Pompes max d’affilée",u:"rép",s:l=>Math.max(2,Math.round(l*.1)),h:"Corps aligné, descente complète, sans pause au sol."},
+{id:"aus",n:"Tractions australiennes max",u:"rép",s:l=>Math.max(1,Math.round(l*.1)),h:"Corps aligné, poitrine à la barre, sans élan. Garde toujours la même variante (corps presque horizontal, genoux fléchis) pour comparer."},
 {id:"planche",n:"Planche sur avant-bras",u:"s",s:()=>10,h:"Fessiers alignés avec les épaules."},
 {id:"taille",n:"Tour de taille (nombril)",u:"cm",s:()=>-1,h:"Même heure, à jeun, une fois par semaine."}
 ];
@@ -96,62 +97,65 @@ const ref=(id,d)=>last(id)??d;
 const vma=()=>last("cooper")?last("cooper")/100:null; // km/h ≈ vitesse du demi-Cooper (estimation)
 const kmh=(a,b)=>vma()?`${(vma()*a/100).toFixed(1)}–${(vma()*b/100).toFixed(1)} km/h`:"fais le demi-Cooper";
 
-const PV=["standard, descente 3 s","largeur variable (épaules +10 cm, épaules, serrées)","pieds surélevés (chaise)","explosives","archer","pieds surélevés + pause 2 s","pseudo-planche (mains vers les hanches)","archer pieds surélevés"];
+const PV=["standard, descente 3 s","largeur variable (épaules +10 cm, épaules, serrées)","pieds sur une marche basse","pieds surélevés (chaise)","décalées (une main surélevée), alternées","pieds surélevés + pause 2 s","décalées, descente 4 s","pieds surélevés, descente 4 s + pause 2 s"];
+const AU=["corps incliné haut (pieds près de la barre)","corps incliné moyen","corps presque horizontal, genoux fléchis","corps horizontal, jambes tendues","pieds surélevés","pieds surélevés + pause 1 s poitrine à la barre","prise serrée (paumes vers toi)","prise serrée, pieds surélevés, descente 3 s"];
 const TT=()=>{const ph=Math.min(7,Math.floor((nowW()-1)/25));return ph<1?T:T.concat([{id:"pv"+ph,n:"Pompes max – "+PV[ph],u:"rép",s:l=>Math.max(1,Math.round(l*.1)),h:"Variante de ta phase actuelle : ton meilleur indicateur de force."}])};
 const PH=["Fondations","Volume","Force relative","Puissance","Unilatéral","Densité","Maîtrise","Élite"];
 /* Génération : 8 phases de 25 semaines, cycles de 6 (5 de charge croissante + 1 de décharge/tests) */
 const ns=pr=>{const m=/^(\d+) ×/.exec(pr);return m?Math.min(8,+m[1]):1};
-const SH={A:[["a1","a4"],["a2","a5"],["a6"]],B:[["b1","b6"],["b2","b3"]],C:[["c1"],["c8","c5"],["c6","c2"]],D:[["d1","d4"],["d2","d5"],["d6"]]};
+const SH={A:[["a1","a4"],["a2","a9"],["a6","a5"],["a8"]],B:[["b1","b6"],["b2","b3"],["b7"]],C:[["c1"],["c3","c5"],["c8","c6"],["c2"]],D:[["d1","d4"],["d2","d5"],["d6","d7"]]};
 function plan(w,ct){
  const ph=Math.min(7,Math.floor((w-1)/25)),c=Math.floor((w-1)/6),k=(w-1)%6,dl=k==5,m=(dl?.75:1)*(1+Math.max(0,w-200)/100);
  const R=x=>Math.max(1,Math.round(x*m)),f=dl?.5:Math.min(.85,.55+.05*k+.01*ph);
- const pb=ref("pompes",10),pr=Math.max(3,Math.round(pb*f*[1,1,.8,.7,.5,.65,.4,.4][ph])),ps=Math.max(2,3+Math.floor(ph/2)-(dl?1:0));
+ const pb=ref("pompes",10),pr=Math.max(3,Math.round(pb*f*[1,1,.9,.8,.65,.6,.5,.45][ph])),ps=Math.max(2,3+Math.floor(ph/2)-(dl?1:0));
 
  const A=[
-  ["a1","Pompes – "+PV[ph],`${ps} × ${pr}`,"Repos 90 s. Bloqué ? −2 reps ou mains surélevées."],
-  ["a2",ph<4?"Dips sur chaise":ph<6?"Dips pieds surélevés":"Dips lents (4 s)",`${3+Math.floor(ph/3)} × ${R(9+1.5*ph+.8*k)}`,"Repos 60 s."],
-  ["a3",ph<1?"Pompes mains surélevées":ph<4?"Pompes diamant":"Pompes diamant pieds surélevés",`2 × ${Math.max(5,Math.round(pr*.8))}`,"Fin de séance, technique propre."],
-  ["a6",ph<3?"Pompes pike (épaules)":"Pompes pike pieds surélevés",`3 × ${R(Math.max(5,Math.round(pr*.7)))}`,"Hanches hautes, tête vers le sol entre les mains."],
+  ["a1","Pompes – "+PV[ph],`${ps} × ${pr}`,"Repos 90 s. Corps aligné, coudes à 45°. Bloqué ? −2 reps ou mains surélevées."],
+  ["a2","Pompes coudes serrés (mains sur une chaise)",`${3+Math.floor(ph/3)} × ${Math.max(5,Math.round(pr*.9))}`,"Repos 60 s. Coudes près du corps, descente contrôlée."],
+  ["a9","Tractions australiennes – "+AU[ph],`${3+Math.floor(ph/3)} × ${R(Math.min(15,6+k+ph))}`,"Sous une barre basse ou une table très solide : teste-la avant. Corps gainé, omoplates serrées, poitrine vers la barre."],
+  ["a3","Pompes mains surélevées (finition)",`2 × ${Math.max(5,Math.round(pr*.8))}`,"Fin de séance, technique propre."],
+  ["a6",ph<4?"Planche haute, toucher d’épaule alterné":"Pompes pike, amplitude réduite",ph<4?`3 × ${R(10+k+ph)} / côté`:`3 × ${R(Math.max(5,Math.round(pr*.6)))}`,ph<4?"Bassin stable, sans balancer.":"Hanches hautes, descente courte, épaules loin des oreilles."],
   ["a4","Planche avant-bras",`3 × ${R(30+12*ph+5*k)} s`,"Repos 15 s (EPMS)."],
-  ["a5","Planche latérale",`2 × ${R(20+6*ph+3*k)} s / côté`,"Repos 15 s."],
-  ["a7","Superman + Y-T-W au sol (dos)",`3 × ${R(10+k+Math.floor(ph/2))}`,"Tenue 2 s en haut, mouvement lent."]];
- const SQ=["½ squat (genoux à 90°)","½ squat, descente 3 s","squat bulgare (pied sur chaise)","squat sauté","squat bulgare, descente 3 s","pistol assisté (main sur un mur)","pistol assisté léger","pistol sur chaise"];
- const sq=ph<2?`4 × ${R(Math.min(50,25+3*k+5*ph))}`:ph==3?`4 × ${R(10+k)}`:`3 × ${R(Math.min(15,7+k+ph))} / jambe`;
+  ["a5",ph<2?"Planche latérale sur les genoux":"Planche latérale",`2 × ${R(20+6*ph+3*k)} s / côté`,"Repos 15 s."],
+  ["a8","Crunch (mains aux tempes)",`3 × ${R(12+k+ph)}`,"Lent, menton éloigné de la poitrine, lombaires au sol."]];
+ const SQ=["½ squat (genoux à 90°)","½ squat, descente 3 s","squat, pause 2 s en bas","squat fendu (fente statique), descente 3 s","squat bulgare (pied arrière sur chaise basse)","assis-debout sur une jambe (chaise haute)","assis-debout sur une jambe (chaise moyenne)","assis-debout sur une jambe (chaise basse)"];
+ const sq=ph<2?`4 × ${R(Math.min(50,25+3*k+5*ph))}`:ph==2?`4 × ${R(15+k)}`:`3 × ${R(Math.min(15,7+k+ph))} / jambe`;
  const mins=Math.round(Math.min(60,15+4*c)*(ct?.75:1)),fr=Math.round(Math.min(20,8+Math.floor(ph*1.5)+Math.floor(k/2))*(ct?.75:1));
  const cont=`Footing continu ${mins} min · ${kmh(ph<1?55:65,ph<1?65:75)}`,frac=`Fractionné 30 s vite / 30 s lent × ${fr} · vite ≈ ${kmh(90,100)}`;
  const run=dl?"Demi-Cooper (test) puis 15 min de footing":cont;
  const runD=dl?"Footing léger 15 min":c==0?`Footing léger ${Math.min(20,mins)} min · ${kmh(55,65)}`:frac;
  const B=[
-  ["b1",SQ[ph],sq,"Dos droit, talons au sol, lent."],
-  ["b2",ph<3?"Fentes marchées":"Fentes sautées alternées",`3 × ${R(10+k+ph)} / jambe`,"Genou avant au-dessus du pied."],
-  ["b3",ph<3?"Pont fessier unipodal":"Pont unipodal pieds surélevés",`3 × ${R(8+k+ph)} / jambe`,"Sans à-coup."],
+  ["b1",SQ[ph],sq,"Dos droit, talons au sol, lent. Arrête si le genou fait mal."],
+  ["b2",ph<3?"Fentes marchées":"Fentes arrière alternées, descente 3 s",`3 × ${R(10+k+ph)} / jambe`,"Genou avant au-dessus du pied."],
+  ["b3",ph<3?"Pont fessier unipodal":"Pont fessier unipodal, pause 2 s",`3 × ${R(8+k+ph)} / jambe`,"Sans à-coup."],
   ["b4","Chaise murale",`3 × ${R(30+8*ph+4*k)} s`,"Cuisses à l’horizontale."],
-  ["b6","Mollets sur une jambe (montées sur la pointe)",`3 × ${R(Math.min(40,15+2*k+2*ph))} / jambe`,"Sur une marche d’escalier si possible, amplitude complète."]];
+  ["b6","Mollets sur une jambe (montées sur la pointe)",`3 × ${R(Math.min(40,15+2*k+2*ph))} / jambe`,"Sur une marche d’escalier si possible, amplitude complète."],
+  ["b7","Bascule du bassin (abdos profonds)",`3 × ${R(10+k+Math.floor(ph/2))}`,"Allongé, genoux fléchis : aplatis le bas du dos au sol, puis relâche."]];
  const n=3+(ph>=4?1:0)-(ct?1:0),d=R(Math.min(90,30+5*ph+2*k)),ab=R(Math.min(40,15+3*ph+k));
  const C=[
-  ["c1",`Circuit postural × ${n}`,`${d} s par exo`,"Lent. Superman · Y-T-W au sol · planche · planche latérale · pont fessier. Repos 15 s, 3 min entre circuits."],
-  ["c2",`Circuit abdos × ${ct?1:ph<4?2:3}`,`${ab} rép par exo`,"Lombaires au sol. Crunch genoux · relevés de jambes · Russian twist · hollow body. Repos 15 s, 3 min entre circuits."],
-  ["c3",ph<3?"Rowing sous table (optionnel)":ph<5?"Rowing sous table pieds surélevés":"Rowing un bras sous table",`${3+Math.floor(ph/3)} × ${R(8+k+ph)}`,"Table très solide. Sinon : nage ventre en plus."],
+  ["c1",`Circuit postural × ${n}`,`${d} s par exo`,"Lent. Pont fessier · wall angels · quatre pattes (levée d’un bras) · planche · planche latérale (sur les genoux au début). Repos 15 s, 3 min entre circuits."],
+  ["c2",`Circuit abdos × ${ct?1:ph<4?2:3}`,`${ab} rép par exo`,"Lombaires au sol. Crunch · bascule du bassin · toucher de talons · levées de genou alternées. Repos 15 s, 3 min entre circuits."],
+  ["c3","Tractions australiennes – "+AU[ph],`${3+Math.floor(ph/3)} × ${R(Math.min(15,6+k+ph))}`,"Même consigne qu’en séance A : barre ou table très solide, corps gainé."],
   ["c4","Tenue abdominale (position du test)",`3 × ${R(Math.min(170,40+12*ph+6*k))} s`,"Même position que le test EPMS."],
-  ["c5","Obliques – crunch diagonal (coude vers genou opposé)",`3 × ${R(12+k+ph)} / côté`,"Lent, lombaires au sol."],
-  ["c6","Obliques – relevés latéraux de jambes",`3 × ${R(10+k+ph)} / côté`,"Allongé sur le côté, jambes tendues, sans balancer."],
-  ...(ph>=2?[["c7","Planche latérale dynamique (hanche qui descend et remonte)",`2 × ${R(8+k+ph)} / côté`,"Contrôle, sans toucher le sol."]]:[])];
+  ["c5","Obliques – toucher de talons alterné (allongé, genoux fléchis)",`3 × ${R(12+k+ph)} / côté`,"Glisse la main vers le talon du même côté, sans tirer sur la nuque."],
+  ["c6","Obliques – inclinaisons latérales debout",`3 × ${R(12+k+ph)} / côté`,"Main qui glisse le long de la cuisse, dos droit, sans te pencher en avant."]];
  const c8=["c8","Pompes légères (volume technique)",`3 × ${Math.max(4,Math.round(pr*.6))}`,"Repos 60 s, qualité avant tout."];
  const D=[
-  ["d1","Montées sur chaise (step-up)",`3 × ${R(10+k+ph)} / jambe`,"Pied entier sur la chaise, sans pousser avec l’autre jambe."],
+  ["d1","Montées sur marche basse (step-up)",`3 × ${R(10+k+ph)} / jambe`,"Pied entier sur la marche, sans pousser avec l’autre jambe."],
   ["d2","Squat large, descente 3 s",`3 × ${R(Math.min(30,15+k+ph))}`,"Pointes de pieds vers l’extérieur, genoux dans l’axe."],
   ["d3","Pont fessier, pause 2 s en haut",`3 × ${R(12+k+ph)}`,"Serre les fessiers en haut."],
   ["d4","Mollets, deux jambes (lent)",`3 × ${R(Math.min(40,18+2*k+2*ph))}`,"3 s en bas, amplitude complète."],
-  ["d5","Planche, planche latérale, hollow body",`3 × ${R(30+10*ph+4*k)} s par exo`,"Repos 15 s entre exercices."],
-  ["d6","Intervalles sur place (jumping jacks, montées de genoux, mountain climbers)",`${dl?Math.round(fr*.7):fr} × 30 s vif / 30 s repos`,"Alterne les trois mouvements, effort vif, sans sortir de chez toi."]];
+  ["d5","Planche, planche latérale, bascule du bassin",`3 × ${R(30+10*ph+4*k)} s par exo`,"Repos 15 s entre exercices."],
+  ["d6","Cardio sans saut (montées de genoux, talons-fesses, pas chassés)",`${dl?Math.round(fr*.7):fr} × 30 s vif / 30 s repos`,"Alterne les trois mouvements, sans sauts, effort soutenu."],
+  ["d7","Levées de genou alternées (allongé)",`3 × ${R(10+k+ph)} / côté`,"Jambe pliée, bas du dos au sol, lent, sans balancer."]];
  const E=[["e1","Course continue",dl?"Demi-Cooper (test) puis 10 min de footing":`${mins} min · ${kmh(ph<1?55:65,ph<1?65:75)}`,"Échauffement 10 min avant. Cible EPMS : 40 min sans s’arrêter, puis VMA 14–15 km/h."]];
- const F=[["f1",c==0||dl?"Footing léger":"Course fractionnée",dl?"15 min":c==0?`${Math.min(20,mins)} min · ${kmh(55,65)}`:`30 s vite / 30 s lent × ${fr} · vite ≈ ${kmh(90,100)}`,"Facultatif. Saute-la si tu es fatigué : la course du samedi suffit."]];
- return {A:{t:"Séance A – Haut du corps 1 : poussée, épaules, dos",s:"lun.",x:A},B:{t:"Séance B – Bas du corps 1 : jambes et mollets",s:"mar.",x:B},C:{t:"Séance C – Haut du corps 2 : dos, abdos, obliques",s:"jeu.",x:C.concat([c8])},D:{t:"Séance D – Bas du corps 2 : jambes, gainage et cardio sur place",s:"ven.",x:D},E:{t:"Séance E – Course du week-end",s:"sam.",x:E},F:{t:"Bonus – Course fractionnée ou footing léger",s:"dim.",x:F,opt:1}};
+ const F=[["f1",c==0||dl||k%2==0?"Footing léger":"Course fractionnée",dl?"15 min":(c==0||k%2==0)?`${Math.min(20,mins)} min · ${kmh(55,65)}`:`30 s vite / 30 s lent × ${fr} · vite ≈ ${kmh(90,100)}`,"Allure facile. Si tu es très fatigué, remplace-la par une marche rapide de 20 min."]];
+ return {A:{t:"Séance A – Haut du corps 1 : poussée, épaules, dos",s:"lun.",x:A},B:{t:"Séance B – Bas du corps 1 : jambes et mollets",s:"mar.",x:B},C:{t:"Séance C – Haut du corps 2 : dos, abdos, obliques",s:"mer.",x:C.concat([c8])},D:{t:"Séance D – Bas du corps 2 : jambes, gainage et cardio sur place",s:"jeu.",x:D},E:{t:"Séance E – Course du week-end",s:"sam.",x:E},F:{t:"Séance F – Course légère du dimanche",s:"dim.",x:F}};
 }
 
 const keyOf=(w,s)=>`${w}-${s}`;
 const done=(w,s)=>!!S.ses[keyOf(w,s)]?.fin;
-const cnt=w=>"ABCDE".split("").filter(s=>done(w,s)).length;
+const cnt=w=>"ABCDEF".split("").filter(s=>done(w,s)).length;
 
 function render(){
  $("#sub").textContent=`Plan 200 semaines, cycles de 6 semaines du manuel EPMS (PIA-7.1.1) · début ${new Date(S.start).toLocaleDateString("fr-FR")}`;
@@ -174,7 +178,7 @@ function seances(){
   const p=P[s],d=S.ses[keyOf(W,s)]||{},ok=!!d.fin;
   const gs=ct&&SH[s]?SH[s].map(g=>g.map(id=>p.x.find(e=>e[0]==id)).filter(Boolean)):p.x.map(e=>[e]);let gi=0;const fl=[];gs.forEach(g=>g.forEach((e,i)=>fl.push([e,ct&&g.length>1&&i==0?++gi:0])));
   const dn=pc?`<div class="row"><label>Durée <input type="number" inputmode="numeric" style="width:70px" data-s="${s}" data-dur value="${d.dur||""}"> min</label><input style="flex:1;min-width:150px" data-s="${s}" data-note value="${(d.note||"").replace(/"/g,"&quot;")}" placeholder="Note (forme, sommeil, ressenti…)"></div>`:"";
-  h+=`<details class="card" ${!ok&&!p.opt&&"ABCDE".split("").find(x=>!done(W,x))==s?"open":""}><summary><span><h3>${p.t}</h3><span class="mute">${p.s}${p.opt?" · facultatif":""}</span></span><span class="tag ${ok?"ok":""}">${ok?"Faite "+new Date(d.fin).toLocaleDateString("fr-FR",{day:"numeric",month:"short"}):"À faire"}</span></summary><div class="body">`;
+  h+=`<details class="card" ${!ok&&!p.opt&&"ABCDEF".split("").find(x=>!done(W,x))==s?"open":""}><summary><span><h3>${p.t}</h3><span class="mute">${p.s}${p.opt?" · facultatif":""}</span></span><span class="tag ${ok?"ok":""}">${ok?"Faite "+new Date(d.fin).toLocaleDateString("fr-FR",{day:"numeric",month:"short"}):"À faire"}</span></summary><div class="body">`;
   for(const [[id,n,pr,tip],gl] of fl){const e=(d.ex||{})[id]||{};
    h+=`${gl?`<div class="mute" style="margin-top:8px"><b>Superset ${gl}</b> : enchaîne sans repos, puis 60 s</div>`:""}<div class="ex"><input type="checkbox" data-s="${s}" data-e="${id}" ${e.ok?"checked":""} aria-label="${n}"><div><b>${n}</b> – ${pr}<small>${tip}</small></div>${pc?`<span></span><div style="grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap">${Array.from({length:ns(pr)},(_,i)=>`<input type="number" step="any" inputmode="decimal" style="width:64px" data-q="${id}" data-i="${i}" data-s="${s}" data-n="${n.replace(/"/g,"&quot;")}" value="${(e.sets||[])[i]??""}" placeholder="${ns(pr)>1?"S"+(i+1):"réalisé"}" aria-label="Série ${i+1} : ${n}">`).join("")}</div>`:`<input data-s="${s}" data-r="${id}" value="${e.r||""}" placeholder="réalisé" aria-label="Réalisé : ${n}">`}</div>`}
   h+=`${dn}<div class="row"><label>Effort ressenti <select data-s="${s}" data-rpe>${["","1","2","3","4","5","6","7","8","9","10"].map(x=>`<option ${String(d.rpe||"")==x?"selected":""}>${x}</option>`).join("")}</select> /10</label><button class="act" data-fin="${s}">${ok?"Mettre à jour":"Valider la séance"}</button>${ok?`<button class="act ghost" data-undo="${s}">Annuler</button>`:""}</div></div></details>`;
@@ -199,15 +203,16 @@ function objectifs(){
 function guide(){
  const G=[
  ["Démarrer en 3 étapes",`<ol><li>Onglet <b>Bilan</b> : règle la date de début du plan (le lundi de ta première semaine).</li><li>Onglet <b>Objectifs</b> : passe les tests de la semaine 1, surtout le demi-Cooper, et enregistre chaque résultat. Les répétitions et les allures de course s’ajustent ensuite à toi.</li><li>Onglet <b>Séances</b> : fais les séances A, B, C, D et E de la semaine en cours.</li></ol>`],
- ["Une semaine type",`<p>Cinq séances de 40 à 50 min : A (haut du corps 1) le lundi, B (bas du corps 1) le mardi, C (haut du corps 2) le jeudi, D (bas du corps 2) le vendredi, E (course) le samedi. Haut et bas alternent : chaque groupe musculaire récupère au moins 48 h (EPMS) et travaille deux fois par semaine. La course est regroupée le week-end : E le samedi, et le dimanche une course fractionnée ou un footing léger, facultatif. En semaine, le vendredi inclut des intervalles sur place pour le cardio. Commence chaque séance par 5 min d’échauffement et finis par des étirements.</p>`],
+ ["Une semaine type",`<p>Six séances de 40 à 50 min : A (haut du corps 1) le lundi, B (bas du corps 1) le mardi, C (haut du corps 2) le mercredi, D (bas du corps 2) le jeudi, E (course) le samedi, F (course légère) le dimanche. Le vendredi est ton jour de repos. Haut et bas alternent : chaque groupe musculaire récupère au moins 48 h (EPMS) et travaille deux fois par semaine. Les abdominaux et le gainage figurent dans chaque séance de renforcement (A à D), soit quatre fois par semaine. La course est regroupée le week-end : E le samedi, et F le dimanche (footing léger, ou fractionné une semaine sur deux). En semaine, la séance D inclut du cardio sans saut. Garde vraiment le vendredi pour récupérer. Commence chaque séance par 5 min d’échauffement et finis par des étirements.</p>`],
  ["Remplir une séance",`<ul><li>Touche une séance pour l’ouvrir. Coche chaque exercice fait et note dans « réalisé » ce que tu as vraiment fait (par exemple 8-7-6).</li><li>Choisis l’effort ressenti de 1 (facile) à 10 (maximum), puis touche <b>Valider la séance</b>. Elle apparaît alors en vert dans le bilan.</li><li>Bloqué sur une série ? Baisse de 2 répétitions ou prends une variante plus facile, plutôt que de sauter la séance.</li><li>Une séance validée par erreur se retire avec <b>Annuler</b>.</li></ul>`],
- ["Mode court",`<p>Dans l’onglet Séances, coche <b>Mode court</b> pour tenir en ~35 min. Les exercices sont regroupés en superséries : deux exercices enchaînés sans repos, puis 60 s. Quelques exercices secondaires sont retirés (pompes de finition, chaise murale, rowing, tenue abdominale, planche latérale dynamique), les circuits ont un tour de moins et la course est raccourcie d’un quart. Tes résultats restent enregistrés quand tu changes de mode. Le volume est plus faible : garde le mode complet dès que tu as le temps et pour les semaines de tests.</p>`],
+ ["Mode court",`<p>Dans l’onglet Séances, coche <b>Mode court</b> pour tenir en ~35 min. Les exercices sont regroupés en superséries : deux exercices enchaînés sans repos, puis 60 s. Quelques exercices secondaires sont retirés (pompes de finition, chaise murale, tenue abdominale, planche latérale dynamique), les circuits ont un tour de moins et la course est raccourcie d’un quart. Tes résultats restent enregistrés quand tu changes de mode. Le volume est plus faible : garde le mode complet dès que tu as le temps et pour les semaines de tests.</p>`],
  ["Suivi précis",`<p>Coche <b>Suivi précis</b> dans l’onglet Séances. Chaque exercice affiche alors une case par série : note les répétitions (ou les secondes) réellement faites, série par série. Tu peux aussi noter la durée de la séance et une remarque (forme, sommeil, ressenti). L’onglet Bilan ajoute ensuite une section <b>Volume et records</b> : meilleure série et total par exercice, et temps d’entraînement cumulé. Tu peux activer ou couper ce mode à tout moment sans rien perdre.</p>`],
  ["Les phases et les cycles",`<p>Le plan compte 8 phases de 25 semaines (boutons 1 à 8 en haut). Chaque phase apporte des variantes plus difficiles. Les semaines sont groupées en cycles de 6 : cinq semaines de charge croissante, puis une semaine de <b>décharge</b> avec volume réduit et tests. Utilise les flèches ou le champ « Aller à la semaine » pour consulter une autre semaine. Après la semaine 200, tu restes en phase Élite et le volume continue d’augmenter.</p>`],
  ["Les tests et les objectifs",`<ul><li>Refais les tests à chaque semaine de décharge (S6, S12, S18…). Chaque carte décrit le protocole à suivre.</li><li>Le chiffre « à battre » est ton dernier résultat plus un petit pas. Il n’y a pas de plafond, sauf les 3’00 des tests de tenue : ensuite, la progression passe par les variantes.</li><li>Tu peux saisir un objectif perso dans le champ de chaque carte.</li><li>Ta VMA (vitesse maximale aérobie) est estimée à partir du demi-Cooper. Elle règle les allures de course de chaque séance.</li><li>Choisis le barème Homme ou Femme en haut de l’onglet Objectifs : il sert à lire ton niveau au demi-Cooper.</li></ul>`],
  ["Sauvegarder",`<ul><li>Chaque action s’enregistre toute seule, mais seulement dans <b>ce navigateur, sur cet appareil</b>.</li><li>Exporte une copie (Bilan, « Exporter ») chaque semaine et garde-la dans ton cloud. « Importer » la remet en place sur un autre appareil ou après un effacement.</li><li>Ouvre toujours le fichier depuis la même adresse et ne vide pas les données du site dans les réglages du navigateur.</li></ul>`],
  ["Synchronisation GitHub",`<p>Elle copie ton suivi dans un dépôt GitHub <b>privé</b>, ce qui donne une sauvegarde permanente et la même progression sur téléphone et ordinateur. Dans l’onglet Bilan, renseigne ton pseudo GitHub, le nom du dépôt de données, la branche (main) et un jeton d’accès limité à ce dépôt, puis touche <b>Enregistrer les réglages</b> et <b>Envoyer</b>. Coche l’envoi automatique pour que chaque modification parte toute seule. À l’ouverture, l’appli propose de charger une version plus récente trouvée sur GitHub. Sur un nouvel appareil : saisis les mêmes réglages puis touche <b>Récupérer</b>. Ne mets jamais le jeton dans un fichier du dépôt.</p>`],
  ["Pause, retard, maladie",`<p>Les données sont rangées par numéro de semaine. Si tu fais une pause de N semaines, décale la date de début de N semaines (onglet Bilan) : tu reprends au même point du plan sans rien perdre. Après une longue pause, refais d’abord les tests plutôt que de reprendre à pleine charge.</p>`],
+ ["Technique avant tout",`<ul><li>Fais toujours la version la plus facile que tu maîtrises : la qualité du geste passe avant les répétitions.</li><li>Les variantes difficiles (pompes décalées, squat bulgare, assis-debout sur une jambe, pompes pike) n’arrivent qu’après plusieurs mois de plan. Si l’une te semble trop dure, reste sur la précédente.</li><li>Pour les tractions australiennes, vérifie que la barre ou la table est parfaitement stable, et commence avec le corps très incliné.</li><li>Filme-toi de temps en temps, de côté ou de face, pour contrôler ton alignement (dos, genoux, coudes).</li></ul>`],
  ["Sécurité",`<p>Une douleur vive, une gêne dans une articulation ou un vertige : arrête l’exercice. Une fatigue anormale plusieurs jours de suite : prends une semaine de décharge. Pour un doute médical, demande l’avis d’un médecin.</p>`]];
  $("#v-g").innerHTML=G.map((g,i)=>`<details class="card" ${i==0?"open":""}><summary><h3>${g[0]}</h3></summary><div class="body">${g[1]}</div></details>`).join("");
 }
@@ -244,10 +249,10 @@ function recs(){const R2={};let mn=0;for(const k in S.ses){const o=S.ses[k];mn+=
 
 function bilan(){
  let tot=0,h="";const cs=[];for(let w=1;w<=200;w++){const n=cnt(w);tot+=n;cs.push(n)}
- const wd=cs.filter(n=>n==5).length;
- h+=`<div class="tg"><div><strong>${tot}/1000</strong><span>séances faites</span></div><div><strong>${wd}</strong><span>semaines complètes</span></div><div><strong>${nowW()}/200</strong><span>semaine en cours</span></div></div><div class="bar"><i style="width:${tot/10}%"></i></div>`;
- h+=`<h2>200 semaines</h2><div class="heat">${cs.map((n,i)=>`<i class="h${n} ${i+1==nowW()?"cur":""}" title="S${i+1} : ${n}/5"></i>`).join("")}</div><p class="mute">Une case par semaine, de claire (0 séance) à foncée (5). Contour orange : semaine en cours.</p><h2>Par phase</h2>`;
- h+=PH.map((p,i)=>{const n=cs.slice(i*25,i*25+25).reduce((a,b)=>a+b,0);return `<div class="wk"><b>P${i+1}</b><div><div>${p} <span class="mute">S${i*25+1}–${i*25+25}</span></div><div class="bar"><i style="width:${n/125*100}%"></i></div></div><span class="mute">${n}/125</span></div>`}).join("");
+ const wd=cs.filter(n=>n==6).length;
+ h+=`<div class="tg"><div><strong>${tot}/1200</strong><span>séances faites</span></div><div><strong>${wd}</strong><span>semaines complètes</span></div><div><strong>${nowW()}/200</strong><span>semaine en cours</span></div></div><div class="bar"><i style="width:${tot/12}%"></i></div>`;
+ h+=`<h2>200 semaines</h2><div class="heat">${cs.map((n,i)=>`<i class="h${n} ${i+1==nowW()?"cur":""}" title="S${i+1} : ${n}/6"></i>`).join("")}</div><p class="mute">Une case par semaine, de claire (0 séance) à foncée (6). Contour orange : semaine en cours.</p><h2>Par phase</h2>`;
+ h+=PH.map((p,i)=>{const n=cs.slice(i*25,i*25+25).reduce((a,b)=>a+b,0);return `<div class="wk"><b>P${i+1}</b><div><div>${p} <span class="mute">S${i*25+1}–${i*25+25}</span></div><div class="bar"><i style="width:${n/150*100}%"></i></div></div><span class="mute">${n}/150</span></div>`}).join("");
  h+=recs();
  h+=ghUI();
  h+=`<h2>Données</h2><p class="mute">Tout reste dans ton navigateur. Exporte de temps en temps pour garder une copie ou changer d’appareil.</p>
