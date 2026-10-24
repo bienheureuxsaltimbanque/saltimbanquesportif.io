@@ -220,16 +220,25 @@ function guide(){
 /* Synchronisation GitHub (dépôt privé de données, jeton gardé hors de l’export) */
 const ghURL=()=>`https://api.github.com/repos/${GH.o}/${GH.r}/contents/suivi.json?ref=${GH.b||"main"}`;
 const ghH=raw=>({Authorization:"Bearer "+GH.t,Accept:raw?"application/vnd.github.raw+json":"application/vnd.github+json"});
+const ghErr=async r=>"GitHub "+r.status+" – "+((await r.json().catch(()=>({}))).message||"");
 const say=m=>{const e=$("#gst");if(e)e.textContent=m};
-async function ghGet(){const r=await fetch(ghURL(),{headers:ghH(true)});if(r.status==404)return null;if(!r.ok)throw new Error("GitHub "+r.status);return JSON.parse(await r.text())}
+async function ghGet(){const r=await fetch(ghURL(),{headers:ghH(true),cache:"no-store"});if(r.status==404)return null;if(!r.ok)throw new Error(await ghErr(r));return JSON.parse(await r.text())}
+let pushing=false,again=false;
 async function ghPush(auto){
+ if(pushing){again=true;return}pushing=true;
  try{say("Envoi…");const rem=await ghGet();
   if(rem&&(rem.upd||0)>(S.upd||0)){if(auto){say("GitHub contient une version plus récente : touche « Récupérer ».");return}if(!confirm("GitHub contient une version plus récente. L’écraser ?"))return}
-  const m=await fetch(ghURL(),{headers:ghH(false)});const sha=m.ok?(await m.json()).sha:undefined;
-  const body={message:"Suivi "+today(),content:btoa(unescape(encodeURIComponent(JSON.stringify(S)))),branch:GH.b||"main"};if(sha)body.sha=sha;
-  const r=await fetch(ghURL().split("?")[0],{method:"PUT",headers:Object.assign({"Content-Type":"application/json"},ghH(false)),body:JSON.stringify(body)});
-  if(!r.ok)throw new Error("GitHub "+r.status);say("Envoyé à "+new Date().toLocaleTimeString("fr-FR")+".")
- }catch(e){say("Échec : "+e.message)}
+  const put=b=>fetch(ghURL().split("?")[0],{method:"PUT",headers:Object.assign({"Content-Type":"application/json"},ghH(false)),body:JSON.stringify(b)});
+  let r;
+  for(let i=0;i<3;i++){
+   const m=await fetch(ghURL(),{headers:ghH(false),cache:"no-store"});const sha=m.ok?(await m.json()).sha:undefined;
+   const body={message:"Suivi "+today(),content:btoa(unescape(encodeURIComponent(JSON.stringify(S)))),branch:GH.b||"main"};if(sha)body.sha=sha;
+   r=await put(body);if(r.status==422&&!sha&&i==0){delete body.branch;r=await put(body)}
+   if(r.ok||(r.status!=409&&r.status!=422))break;
+   await new Promise(x=>setTimeout(x,800));
+  }
+  if(!r.ok)throw new Error(await ghErr(r));say("Envoyé à "+new Date().toLocaleTimeString("fr-FR")+".")
+ }catch(e){say("Échec : "+e.message)}finally{pushing=false;if(again){again=false;ghPush(true)}}
 }
 async function ghPull(silent){
  try{say("Récupération…");const rem=await ghGet();if(!rem){say("Aucun fichier suivi.json sur GitHub : envoie d’abord.");return}
