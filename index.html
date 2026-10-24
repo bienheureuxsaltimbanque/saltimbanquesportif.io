@@ -104,10 +104,15 @@ const PH=["Fondations","Volume","Force relative","Puissance","Unilatéral","Dens
 /* Génération : 8 phases de 25 semaines, cycles de 6 (5 de charge croissante + 1 de décharge/tests) */
 const ns=pr=>{const m=/^(\d+) ×/.exec(pr);return m?Math.min(8,+m[1]):1};
 const SH={A:[["a1","a4"],["a2","a9"],["a6","a5"],["a8"]],B:[["b1","b6"],["b2","b3"],["b7"]],C:[["c1"],["c3","c5"],["c8","c6"],["c2"]],D:[["d1","d4"],["d2","d5"],["d6","d7"]]};
-function plan(w,ct){
+function plan(w,ct){ // applique les ajustements automatiques par exercice (S.ax)
+ const P=plan0(w,ct),ph=Math.min(7,Math.floor((w-1)/25));
+ for(const s in P)P[s].x=P[s].x.map(e=>{const f=(S.ax||{})[e[0]+"."+ph];if(!f||e[0]=="a1"||e[0]=="d6")return e;
+  return [e[0],e[1],e[2].replace(/(\d+ × )(\d+)/,(m,a,b)=>a+Math.max(1,Math.round(b*(1+f)))),e[3]+" · ajusté "+(f>0?"+":"")+Math.round(f*100)+" %"]});
+ return P}
+function plan0(w,ct){
  const ph=Math.min(7,Math.floor((w-1)/25)),c=Math.floor((w-1)/6),k=(w-1)%6,dl=k==5,m=(dl?.75:1)*(1+Math.max(0,w-200)/100);
  const R=x=>Math.max(1,Math.round(x*m)),f=dl?.5:Math.min(.85,.55+.05*k+.01*ph);
- const pb=ref("pompes",10),pr=Math.max(3,Math.round(pb*f*[1,1,.9,.8,.65,.6,.5,.45][ph])),ps=Math.max(2,3+Math.floor(ph/2)-(dl?1:0));
+ const pb=Math.max(8,ref("pompes",20)+(S.adj||0)),pr=Math.max(3,Math.round(pb*f*[1,1,.9,.8,.65,.6,.5,.45][ph])),ps=Math.max(2,3+Math.floor(ph/2)-(dl?1:0));
 
  const A=[
   ["a1","Pompes – "+PV[ph],`${ps} × ${pr}`,"Repos 90 s. Corps aligné, coudes à 45°. Bloqué ? −2 reps ou mains surélevées."],
@@ -170,6 +175,8 @@ function render(){
 
 function seances(){
  const ct=!!S.court,pc=!!S.prec,P=plan(W,ct);let h="";
+ const nax=Object.values(S.ax||{}).filter(Boolean).length;
+ if(S.adj||nax)h+=`<div class="note">Ajustements automatiques actifs : max de pompes de référence ${S.adj>0?"+":""}${S.adj||0}, ${nax} autre${nax>1?"s":""} exercice${nax>1?"s":""} ajusté${nax>1?"s":""}. Un nouveau test de pompes remet l’ajustement des pompes à zéro. <button class="act ghost" id="axr" style="margin-top:6px">Tout remettre à zéro</button></div>`;
  if((W-1)%6==5)h+=`<div class="note">Semaine de décharge : volume réduit pour récupérer. Passe les tests de l’onglet Objectifs.</div>`;
  if(!last("cooper"))h+=`<div class="note">Commence par les tests de l’onglet Objectifs (surtout le demi-Cooper) : les allures et les répétitions s’ajusteront à toi.</div>`;
  h+=`<p class="mute">Haut et bas du corps alternent : chaque groupe musculaire récupère au moins 48 h (EPMS). Séance de ~45 min : 5 min d’échauffement, le cœur de séance, étirements.</p>`;
@@ -206,7 +213,7 @@ function guide(){
  ["Une semaine type",`<p>Six séances de 40 à 50 min : A (haut du corps 1) le lundi, B (bas du corps 1) le mardi, C (haut du corps 2) le mercredi, D (bas du corps 2) le jeudi, E (course) le samedi, F (course légère) le dimanche. Le vendredi est ton jour de repos. Haut et bas alternent : chaque groupe musculaire récupère au moins 48 h (EPMS) et travaille deux fois par semaine. Les abdominaux et le gainage figurent dans chaque séance de renforcement (A à D), soit quatre fois par semaine. La course est regroupée le week-end : E le samedi, et F le dimanche (footing léger, ou fractionné une semaine sur deux). En semaine, la séance D inclut du cardio sans saut. Garde vraiment le vendredi pour récupérer. Commence chaque séance par 5 min d’échauffement et finis par des étirements.</p>`],
  ["Remplir une séance",`<ul><li>Touche une séance pour l’ouvrir. Coche chaque exercice fait et note dans « réalisé » ce que tu as vraiment fait (par exemple 8-7-6).</li><li>Choisis l’effort ressenti de 1 (facile) à 10 (maximum), puis touche <b>Valider la séance</b>. Elle apparaît alors en vert dans le bilan.</li><li>Bloqué sur une série ? Baisse de 2 répétitions ou prends une variante plus facile, plutôt que de sauter la séance.</li><li>Une séance validée par erreur se retire avec <b>Annuler</b>.</li></ul>`],
  ["Mode court",`<p>Dans l’onglet Séances, coche <b>Mode court</b> pour tenir en ~35 min. Les exercices sont regroupés en superséries : deux exercices enchaînés sans repos, puis 60 s. Quelques exercices secondaires sont retirés (pompes de finition, chaise murale, tenue abdominale, planche latérale dynamique), les circuits ont un tour de moins et la course est raccourcie d’un quart. Tes résultats restent enregistrés quand tu changes de mode. Le volume est plus faible : garde le mode complet dès que tu as le temps et pour les semaines de tests.</p>`],
- ["Suivi précis",`<p>Coche <b>Suivi précis</b> dans l’onglet Séances. Chaque exercice affiche alors une case par série : note les répétitions (ou les secondes) réellement faites, série par série. Tu peux aussi noter la durée de la séance et une remarque (forme, sommeil, ressenti). L’onglet Bilan ajoute ensuite une section <b>Volume et records</b> : meilleure série et total par exercice, et temps d’entraînement cumulé. Tu peux activer ou couper ce mode à tout moment sans rien perdre.</p>`],
+ ["Suivi précis",`<p>Coche <b>Suivi précis</b> dans l’onglet Séances. Chaque exercice affiche alors une case par série : note les répétitions (ou les secondes) réellement faites, série par série. Tu peux aussi noter la durée de la séance et une remarque (forme, sommeil, ressenti). L’onglet Bilan ajoute ensuite une section <b>Volume et records</b> : meilleure série et total par exercice, et temps d’entraînement cumulé. Tu peux activer ou couper ce mode à tout moment sans rien perdre. En suivi précis, le plan s’ajuste aussi tout seul. Pour les pompes : si tu réussis toutes les répétitions prescrites, ton max de référence monte de 1 ; si une série est ratée de plus de 2 répétitions, il baisse de 2. Pour les autres exercices : réussir toutes les séries ajoute 5 % à la prochaine prescription de cet exercice, et rater nettement une série (moins de 80 % de l’objectif) retire 10 %, dans la limite de ±30 %. L’ajustement repart à zéro à chaque changement de phase, ne s’applique pas les semaines de décharge, et se remet à zéro avec le bouton du bandeau en haut des séances.</p>`],
  ["Les phases et les cycles",`<p>Le plan compte 8 phases de 25 semaines (boutons 1 à 8 en haut). Chaque phase apporte des variantes plus difficiles. Les semaines sont groupées en cycles de 6 : cinq semaines de charge croissante, puis une semaine de <b>décharge</b> avec volume réduit et tests. Utilise les flèches ou le champ « Aller à la semaine » pour consulter une autre semaine. Après la semaine 200, tu restes en phase Élite et le volume continue d’augmenter.</p>`],
  ["Les tests et les objectifs",`<ul><li>Refais les tests à chaque semaine de décharge (S6, S12, S18…). Chaque carte décrit le protocole à suivre.</li><li>Le chiffre « à battre » est ton dernier résultat plus un petit pas. Il n’y a pas de plafond, sauf les 3’00 des tests de tenue : ensuite, la progression passe par les variantes.</li><li>Tu peux saisir un objectif perso dans le champ de chaque carte.</li><li>Ta VMA (vitesse maximale aérobie) est estimée à partir du demi-Cooper. Elle règle les allures de course de chaque séance.</li><li>Choisis le barème Homme ou Femme en haut de l’onglet Objectifs : il sert à lire ton niveau au demi-Cooper.</li></ul>`],
  ["Sauvegarder",`<ul><li>Chaque action s’enregistre toute seule, mais seulement dans <b>ce navigateur, sur cet appareil</b>.</li><li>Exporte une copie (Bilan, « Exporter ») chaque semaine et garde-la dans ton cloud. « Importer » la remet en place sur un autre appareil ou après un effacement.</li><li>Ouvre toujours le fichier depuis la même adresse et ne vide pas les données du site dans les réglages du navigateur.</li></ul>`],
@@ -270,18 +277,35 @@ function bilan(){
  $("#v-b").innerHTML=h;
 }
 
+function adjAll(s,k){ // ajuste chaque exercice selon la séance réellement faite (suivi précis)
+ if(!S.prec||(W-1)%6==5)return;
+ const ph=Math.min(7,Math.floor((W-1)/25)),o=(S.ses[k]||{}).ex||{};S.ax=S.ax||{};
+ for(const e of plan(W,!!S.court)[s].x){const id=e[0];if(id=="a1"||id=="d6")continue;
+  const m=/^(\d+) × (\d+)/.exec(e[2]),st=o[id]&&o[id].sets;if(!m||!st)continue;
+  const v=st.map(parseFloat).filter(x=>x>0);if(v.length<+m[1])continue;
+  const t=+m[2],key=id+"."+ph,f=S.ax[key]||0;
+  if(v.every(x=>x>=t))S.ax[key]=Math.min(.3,Math.round((f+.05)*100)/100);
+  else if(v.some(x=>x<t*.8))S.ax[key]=Math.max(-.3,Math.round((f-.1)*100)/100)}
+}
+function adjPompes(k){ // ajuste le max de référence selon la séance A réellement faite (suivi précis)
+ if(!S.prec||(W-1)%6==5)return;
+ const P=plan(W,!!S.court).A.x[0],m=/^(\d+) × (\d+)/.exec(P[2]),e=((S.ses[k]||{}).ex||{}).a1,v=((e&&e.sets)||[]).map(parseFloat).filter(x=>x>0);
+ if(!m||v.length<+m[1])return;const pr=+m[2];
+ if(v.every(x=>x>=pr))S.adj=Math.min(6,(S.adj||0)+1);else if(v.some(x=>x<pr-2))S.adj=Math.max(-6,(S.adj||0)-2);
+}
 document.addEventListener("click",e=>{
  const t=e.target,g=a=>t.closest("["+a+"]")?.getAttribute(a);
  if(t.id=="ghs"){GH={o:$("#gho").value.trim(),r:$("#ghr").value.trim(),b:$("#ghb").value.trim()||"main",t:$("#ght").value.trim(),auto:$("#gha").checked};try{localStorage.setItem("epms-gh",JSON.stringify(GH))}catch(e){}say("Réglages enregistrés.");return}
  if(t.id=="ghp"){ghPush(false);return}
  if(t.id=="ghg"){ghPull(false);return}
+ if(t.id=="axr"){S.adj=0;S.ax={};save();render();return}
  if(t.id=="pv"){W=Math.max(1,W-1);render();return}
  if(t.id=="nx"){W=Math.min(520,W+1);render();return}
  if(g("data-w")){W=+g("data-w");render();return}
  if(t.dataset.v){V=t.dataset.v;render();return}
- if(t.dataset.fin){const s=t.dataset.fin,k=keyOf(W,s);S.ses[k]=Object.assign(S.ses[k]||{},{fin:today()});save();render();return}
+ if(t.dataset.fin){const s=t.dataset.fin,k=keyOf(W,s);if(!(S.ses[k]||{}).fin){adjAll(s,k);if(s=="A")adjPompes(k)}S.ses[k]=Object.assign(S.ses[k]||{},{fin:today()});save();render();return}
  if(t.dataset.undo){delete S.ses[keyOf(W,t.dataset.undo)].fin;save();render();return}
- if(t.dataset.add){const id=t.dataset.add,v=parseFloat($("#in-"+id).value);if(isNaN(v))return;(S.logs[id]=S.logs[id]||[]).push({d:today(),v});save();render();return}
+ if(t.dataset.add){const id=t.dataset.add,v=parseFloat($("#in-"+id).value);if(isNaN(v))return;(S.logs[id]=S.logs[id]||[]).push({d:today(),v});if(id=="pompes")S.adj=0;save();render();return}
  if(t.id=="exp"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="suivi-epms-"+today()+".json";a.click();return}
  if(t.id=="rst"&&confirm("Effacer toutes les données de suivi ?")){S={start:mon(new Date()),sex:"H",logs:{},tg:{},ses:{}};save();W=nowW();render()}
 });
